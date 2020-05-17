@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sail Hub</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="./table.css" >
+    <link rel="stylesheet" href="./main.css" >
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdn.rawgit.com/officert/vue-slideout-panel/a07d8e2e/dist/vue2-slideout-panel.min.js"></script>
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <script>
+        const prod = true;
+    </script>
+</head>
+<body>
+    <h1>OP Codespaces</h1>
+
+    <div id="app">
+        <button id="new" class="btn btn-default" v-on:click.prevent="showCreationPanel">New</button>
+        <table class="rwd-table">
+            <tr>
+                <th>Name</th>
+                <th>Available</th>
+                <th></th>
+                <th></th>
+            </tr>
+            <tr v-for="service in services">
+                <td data-th="Name">{{ service.name }} </td>
+                <td data-th="Available">{{ service.status }}</td>
+                <td data-th="Action"><button class="btn btn-sm btn-info" v-on:click="openService(service)">Open</button></td>
+                <td data-th="Deletion"><button class="btn btn-xs btn-danger" v-on:click.prevent="() => showDeletionPanel(service)">X</button></td>
+            </tr>
+        </table>
+        <slideout-panel></slideout-panel>
+    </div>
+
+    <script>
+        window.vue2PanelDebug = !prod;
+
+        Vue.component("panel-creation", {
+            name: "panel-creation",
+            template: `
+            <div>
+                <button class="btn btn-link close-panel" v-on:click.prevent="closePanel">
+                    Close
+                </button>
+
+                <div class="form-group">
+                    <label for="repo">Name</label>
+                    <input type="text" class="form-control" id="name" v-model="name">
+                </div>
+                <div class="form-group">
+                    <label for="repo">Github Repo link</label>
+                    <input type="text" class="form-control" id="repo" v-model="repoUrl">
+                </div>
+                <div class="form-group">
+                    <label for="repo">Password</label>
+                    <input type="password" class="form-control" id="password" v-model="password">
+                </div>
+
+                <button class="btn btn-success" v-on:click.prevent="createRepo">
+                    Create
+                </button>
+            </div>
+            `,
+            data() {
+                return {
+                    name: '',
+                    repoUrl: '',
+                    password: ''
+                };
+            },
+            methods: {
+                closePanel(refresh) {
+                    this.$emit("closePanel", { refresh: refresh });
+                },
+                createRepo() {
+                    const that = this;
+                    if (this.repoUrl && this.name && this.password) {
+                        fetch(`/api/codespace/create?password=${this.password}&github=${this.repoUrl}&name=${this.name}`)
+                            .then(function(response) {
+                                if (response.status === 200) {
+                                    that.closePanel(true);
+                                }
+                            });
+                        
+                    }
+                }
+            }
+        });
+
+        Vue.component("panel-deletion", {
+            name: "panel-deletion",
+            template: `
+            <div>
+                <button class="btn btn-link close-panel" v-on:click.prevent="closePanel">
+                    Close
+                </button>
+
+                <h2>Deletion of <br/><strong>{{ service.name }}</strong></h2>
+                
+                <div class="alert alert-warning">
+                    <!--<strong>Warning!</strong> Indicates a warning that might need attention.-->
+                    All unpushed modifications will be lost.
+                </div>
+
+                <div class="form-group">
+                    <label for="repo-name">Enter name of the repo:</label>
+                    <input type="text" class="form-control" id="repo-name" v-model="repoName">
+                </div>
+
+                <button class="btn btn-danger" v-on:click.prevent="deleteRepo">
+                    Delete
+                </button>
+            </div>
+            `,
+            props: ['service'],
+            data() {
+                return {
+                    repoName: ''
+                };
+            },
+            methods: {
+                closePanel(refresh) {
+                    this.$emit("closePanel", { refresh: refresh });
+                },
+                deleteRepo() {
+                    const that = this;
+                    if (this.service.name === this.repoName) {
+                        console.log('delete');
+                        fetch(`/api/codespace/delete?name=${this.service.name}`).then(function(response) {
+                            if (response.status === 200) {
+                                that.closePanel(true);
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                services: [],
+                loading: true
+            },
+            methods: {
+                openService(service) {
+                    window.open(service.url, '_blank');
+                    // location.href = service.url;
+                    return false;
+                },
+                showCreationPanel() {
+                    const that = this;
+                    console.log('showPanel');
+                    const panel = this.$showPanel({
+                        component: "panel-creation",
+                        cssClass: "panel-creation",
+                        props: {}
+                    });
+                    panel.promise.then(function(result) {
+                        if (result && result.refresh) {
+                            that.fetchData();
+                        }
+                    });
+                },
+                showDeletionPanel(service) {
+                    const that = this;
+                    console.log('showPanel');
+                    const panel = this.$showPanel({
+                        component: "panel-deletion",
+                        cssClass: "panel-deletion",
+                        props: {
+                            service: service
+                        }
+                    });
+                    panel.promise.then(function(result) {
+                        if (result && result.refresh) {
+                            that.fetchData();
+                        }
+                    });
+                },
+                fetchData() {
+                    fetch('/api/codespace')
+                    .then(response => {
+                        return response.json();
+                    })
+                    .then(response => {
+                        this.services = response.map(service => {
+                            return {
+                                name: service.name,
+                                status: service.available,
+                                url: service.url
+                            }
+                        });
+                    })
+                    .finally(() => this.loading = false);
+                }
+            },
+            mounted () {
+                this.fetchData();
+            }
+        });
+    </script>
+</body>
+</html>

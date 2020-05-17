@@ -1,0 +1,13 @@
+services:
+  ocodespace-editor:
+    # image: ./src/services/Service.Admin
+    build:
+        dockerfile: ./Dockerfile
+        context: ./
+    ports:
+    - 8080/http
+    env:
+    - PASSWORD=12345
+    - GITHUB_REPOSITORY=https://github.com/gilsdav/portfolio.git
+    global_permissions:
+    - 'create,get,list *'

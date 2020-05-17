@@ -1,0 +1,9 @@
+services:
+  kube-controller:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+    port: 80/http
+    global_permissions:
+    - 'create,get,list,delete *'
+    - 'create,get,list,delete rio.cattle.io/*'

@@ -1,0 +1,21 @@
+h1, #app {
+    text-align: center;
+}
+
+.rwd-table {
+    margin: auto;
+}
+
+#new {
+    margin-bottom: 10px;
+}
+
+.slideout {
+    padding: 20px;
+}
+
+.close-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
