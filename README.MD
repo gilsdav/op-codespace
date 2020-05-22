@@ -35,3 +35,17 @@ Example of op-codespace.json:
 * List: `/api/codespace`
 * Create: `/api/codespace/create?password=12345&github=https://github.com/gilsdav/sail-hub.git&name=sail-hub`
 * Delete: `/api/codespace/delete?name=sail-hub`
+
+## Interface
+
+### Home
+
+![home](./README/home.png "Home")
+
+### Create
+
+![create](./README/create.png "Create")
+
+### VS-Code
+
+![vs-code](./README/vs-code.png "VS-Code")
