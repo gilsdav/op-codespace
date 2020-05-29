@@ -31,7 +31,7 @@ function mapStatus(status) {
 }
 
 app.get('/api/codespace', (req, res) => {
-    const result = execSync('rio --kubeconfig=kubeconfig.json -n codespace ps --format json').toString().replace('}\n\n{', '},\n{');
+    const result = execSync('rio --kubeconfig=kubeconfig.json -n codespace ps --format json').toString().replace(/}\n\n{/g, '},\n{');
     const parsedResult = JSON.parse(`[${result}]`);
     res.send(parsedResult.map(res => mapStatus(res.Obj.status)));
 });
