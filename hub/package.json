@@ -10,6 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "@kubernetes/client-node": "^0.11.2",
-    "express": "^4.17.1"
+    "express": "^4.17.3"
   }
 }
